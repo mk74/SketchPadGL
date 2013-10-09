@@ -43,7 +43,7 @@ int h=800;
 int mouse_x = 0;
 int mouse_y = 0;
 
-int drawing_mode=GL_LINES;
+int drawing_mode=GL_LINE_STRIP;
 float line_width = 1;
 Color3f color = {1.0, 1.0, 1.0};
 
@@ -121,17 +121,21 @@ void drawPrim(Primitive *prim){
 void drawPrims(){
 	Primitive *prim = head_prim;
 	while(prim != NULL){
+		if( prim->nxt_prim == NULL && last_vrtx!=NULL ){
+			break;
+		}
 		drawPrim(prim);
 		prim = prim->nxt_prim;
 	}
 }
 
 void drawPrimInteract(Primitive *prim){
+	//adds new vertex where mouse is pointing at
+	//draws this primitive in rubber banding manner
 	glLogicOp(GL_XOR);
 	Vertex *tmp_vrtx = last_vrtx;
 	addVrtx(last_vrtx, mouse_x, mouse_y);
 	drawPrim(prim);
-
 	free(tmp_vrtx->nxt_vrtx);
 	tmp_vrtx->nxt_vrtx = NULL;
 	last_vrtx = tmp_vrtx;
@@ -146,14 +150,6 @@ void display() {
     if(last_prim != NULL && last_vrtx != NULL){
     	drawPrimInteract(last_prim);
     }
- //    glLogicOp(GL_XOR);
-	// if(last_prim != NULL){
-	// 	drawPrim(last_prim); //erase last prim
-	// 	printf("prim is drawn\n");
-	// 	//add vertex
-	// 	//draw again
-	// }
-	// glLogicOp(GL_COPY);
     glFlush();
 }
 
