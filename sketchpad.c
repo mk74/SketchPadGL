@@ -20,6 +20,7 @@ typedef struct Vertex {
 } Vertex;
 
 typedef struct Primitive {
+	int name;
 	int mode;
 	Color3f color;
 	float line_width;
@@ -30,7 +31,8 @@ typedef struct Primitive {
 Primitive *head_prim = NULL; 
 Primitive *last_prim = NULL;
 
-Vertex *last_vrtx = NULL; //keep last point of prim
+Vertex *last_vrtx = NULL; //keep last point of last prim
+int last_name=0;
 
 
 //----------
@@ -46,6 +48,7 @@ int mouse_y = 0;
 int drawing_mode=GL_POLYGON;
 float line_width = 1;
 Color3f color = {1.0, 1.0, 1.0};
+int render_mode = GL_RENDER;
 
 
 
@@ -70,6 +73,7 @@ void editVrtx(Vertex *vrtx, int x, int y){
 void startNewPrim(int x, int y){
 	//create new primitive
 	Primitive *new_prim = malloc(sizeof(struct Primitive));
+	new_prim->name = ++last_name;
 	new_prim->mode = drawing_mode;
 	new_prim->line_width = line_width;
 	new_prim->color = color;
@@ -112,6 +116,10 @@ void drawPrim(Primitive *prim){
 	Vertex *vrtx = prim->nxt_vrtx;
 	glColor3f(prim->color.x, prim->color.y, prim->color.z);
 	glLineWidth(prim->line_width);
+	if(render_mode == GL_SELECT){ 
+		glLoadName(prim->name);
+		//printf("I write specific name\n");
+	}
     glBegin(prim->mode);
     	while(vrtx != NULL){
         	glVertex2i(vrtx->point.x, vrtx->point.y);
@@ -172,14 +180,51 @@ void reshape(int new_w, int new_h)
 //inetraction with user
 //------------
 
-void mouse(int btn, int state, int mouse_x, int mouse_y){
-    if(btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-    	if(last_vrtx == NULL){
-    		startNewPrim(mouse_x, mouse_y);
-    	}else{
-    		addVrtx(last_vrtx, mouse_x, mouse_y);
+void mouse(int btn, int state, int x, int y){
+	GLuint nameBuffer[100];
+	GLint hits;
+	GLint viewport[4];
+	int i;
 
-    	};
+    if(btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+    	if(drawing_mode == -1){
+    		printf("inside\n");
+    		glSelectBuffer(100, nameBuffer);
+    		render_mode = GL_SELECT;
+    		glRenderMode(render_mode);
+    		glInitNames();
+    		glPushName(0);
+
+    		glGetIntegerv(GL_VIEWPORT, viewport);
+  			glPushMatrix();
+  			glLoadIdentity();
+
+    		gluPickMatrix(x, viewport[3]-y, 100, 100, viewport);
+    		gluOrtho2D(x-100, x+100, (viewport[3]-y)-100, (viewport[3]-y)+100);
+    		drawPrims();
+
+    		glPopMatrix();
+    		glFlush();
+
+    		render_mode = GL_RENDER;
+    		hits = glRenderMode(render_mode);
+    		printf("Maciek: %d\n", hits);
+
+    		int *ptr=(int*)nameBuffer;
+
+    		for(i =0; i< hits; i++){
+				ptr +=3;
+				printf("%d\n", *ptr);
+    		}
+
+    	}else{
+    		if(last_vrtx == NULL){
+    			startNewPrim(mouse_x, mouse_y);
+    		}else{
+    			addVrtx(last_vrtx, mouse_x, mouse_y);
+
+    		};
+    	};	
     }
 	glutPostRedisplay();
 }
@@ -224,6 +269,9 @@ void keyboard(unsigned char key, int x, int y){
 			break;
 		case 'w':
 			line_width = rand()%5;
+			break;
+		case 'd':
+			drawing_mode = -1;
 			break;
 	}
 }
