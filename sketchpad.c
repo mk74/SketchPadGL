@@ -43,7 +43,7 @@ int h=800;
 int mouse_x = 0;
 int mouse_y = 0;
 
-int drawing_mode=GL_LINE_STRIP;
+int drawing_mode=GL_POLYGON;
 float line_width = 1;
 Color3f color = {1.0, 1.0, 1.0};
 
@@ -60,6 +60,11 @@ void* addVrtx(Vertex *vrtx, int x, int y){
 	new_vrtx->nxt_vrtx = NULL;
 	vrtx->nxt_vrtx = new_vrtx;
 	last_vrtx = new_vrtx;
+}
+
+void editVrtx(Vertex *vrtx, int x, int y){
+	vrtx->point.x = x;
+	vrtx->point.y = y;
 }
 
 void startNewPrim(int x, int y){
@@ -108,11 +113,8 @@ void drawPrim(Primitive *prim){
 	glColor3f(prim->color.x, prim->color.y, prim->color.z);
 	glLineWidth(prim->line_width);
     glBegin(prim->mode);
-    	//glVertex2i(vrtx->point.x, vrtx->point.y);
-        //vrtx = vrtx->nxt_vrtx;
     	while(vrtx != NULL){
         	glVertex2i(vrtx->point.x, vrtx->point.y);
-        //	glVertex2i(vrtx->point.x, vrtx->point.y);
         	vrtx = vrtx->nxt_vrtx;
         }
     glEnd();
@@ -121,18 +123,18 @@ void drawPrim(Primitive *prim){
 void drawPrims(){
 	Primitive *prim = head_prim;
 	while(prim != NULL){
-		if( prim->nxt_prim == NULL && last_vrtx!=NULL ){
-			break;
-		}
 		drawPrim(prim);
 		prim = prim->nxt_prim;
 	}
 }
 
 void drawPrimInteract(Primitive *prim){
+	//erase part of primitive drawn so far
 	//adds new vertex where mouse is pointing at
-	//draws this primitive in rubber banding manner
+	//draws this primitive again
+	//remove last vertex
 	glLogicOp(GL_XOR);
+	drawPrim(prim);
 	Vertex *tmp_vrtx = last_vrtx;
 	addVrtx(last_vrtx, mouse_x, mouse_y);
 	drawPrim(prim);
@@ -183,14 +185,8 @@ void mouse(int btn, int state, int mouse_x, int mouse_y){
 }
 
 void passiveMotion(int x, int y){
-	// glLogicOp(GL_XOR);
 	mouse_x = x;
 	mouse_y = y;
-	// if(last_prim != NULL){
-	// 	drawPrim(last_prim);
-	// 	printf("prim is drawn\n")	;
-	// }
-	// glLogicOp(GL_COPY);
 	glutPostRedisplay();
 }
 
