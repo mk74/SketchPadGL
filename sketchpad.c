@@ -34,7 +34,10 @@ Primitive *last_prim = NULL;
 
 Vertex *last_vrtx = NULL; //keep last point of last prim
 int last_name=0;
-
+Vertex *selected_vrtx = NULL;
+Primitive *selected_prim = NULL;
+int selected_x = 0;
+int selected_y = 0;
 
 //----------
 //global variables
@@ -46,10 +49,11 @@ int h=800;
 int mouse_x = 0;
 int mouse_y = 0;
 
-int drawing_mode=GL_POINTS;
+int drawing_mode=GL_TRIANGLES;
 float line_width = 1;
 Color3f color = {1.0, 1.0, 1.0};
 int render_mode = GL_RENDER;
+
 
 
 
@@ -116,6 +120,17 @@ void startNewPrim(int x, int y){
 	last_vrtx = fst_vrtx;
 }
 
+Primitive* findPrim(int name){
+	Primitive *current=head_prim;
+	while( current != NULL ){
+		if( current->name == name)
+			return current;
+		current = current -> nxt_prim;
+	}
+	return NULL;
+}
+
+
 void printAll(){
 	Primitive *prim = head_prim;
 	printf("Primitives:\n");
@@ -129,6 +144,17 @@ void printAll(){
         printf("\n\n");
         prim = prim->nxt_prim;
 	}
+}
+void printSelectedPrim(){
+	printf("Selected prim:\n");
+	if(selected_prim != NULL){
+		 	Vertex *vrtx = selected_prim->nxt_vrtx;
+		 	while(vrtx != NULL){
+        		printf("(%d, %d) ", vrtx->point.x, vrtx->point.y);
+        		vrtx = vrtx->nxt_vrtx;
+         	}
+         }
+         printf("\n\n");
 }
 
 //Displaying
@@ -148,14 +174,6 @@ void drawPrim(Primitive *prim){
     glEnd();
 }
 
-void drawPrims(){
-	Primitive *prim = head_prim;
-	while(prim != NULL){
-		drawPrim(prim);
-		prim = prim->nxt_prim;
-	}
-}
-
 void drawPrimInteract(Primitive *prim){
 	//erase part of primitive drawn so far
 	//adds new vertex where mouse is pointing at
@@ -172,14 +190,36 @@ void drawPrimInteract(Primitive *prim){
 	glLogicOp(GL_COPY);
 }
 
+void drawDraggedPrim(Primitive *prim, Vertex *vrtx, int x, int y){
+	//drag one vertex 
+	//draw primitive
+	//drag back this vertex
+	Point tmp_point= vrtx->point;
+	editVrtx(vrtx, x, y);
+	drawPrim(prim);
+	editVrtx(vrtx, tmp_point.x, tmp_point.y);
+}
+
+void drawPrims(){
+	Primitive *prim = head_prim;
+	while(prim != NULL){
+		if(selected_prim!=prim)
+			drawPrim(prim);
+		else
+			drawDraggedPrim(selected_prim, selected_vrtx, selected_x, selected_y);
+		prim = prim->nxt_prim;
+	}
+}
+
 void display() {
-	//printAll();
+	printSelectedPrim();
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
     drawPrims();
-    if(last_prim != NULL && last_vrtx != NULL){
+    if(last_prim != NULL && last_vrtx != NULL)
     	drawPrimInteract(last_prim);
-    }
+    // if(selected_prim != NULL)
+    // 	drawPrimInteract(selected_prim);
     glFlush();
 }
 
@@ -200,7 +240,7 @@ void reshape(int new_w, int new_h)
 //inetraction with user
 //------------
 
-void processHits (GLint hits, GLuint buffer[]){
+void processHits (GLint hits, GLuint buffer[], int x, int y){
    unsigned int i, j;
    GLuint names, *ptr;
 
@@ -208,12 +248,15 @@ void processHits (GLint hits, GLuint buffer[]){
    ptr = (GLuint *) buffer;
    for (i = 0; i < hits; i++) { /*  for each hit  */
       names = *ptr;
-      printf (" number of names for hit = %d\n", names); ptr++;
-      printf("  z1 is %g;", (float) *ptr/0x7fffffff); ptr++;
-      printf(" z2 is %g\n", (float) *ptr/0x7fffffff); ptr++;
+      ptr++; ptr++; ptr++;
       printf ("   the name is ");
       for (j = 0; j < names; j++) {     /*  for each name */
-         printf ("%d ", *ptr); ptr++;
+         printf ("%d ", *ptr); 
+   	     selected_prim = findPrim(*ptr);
+  	 	 selected_vrtx = findNearestVrtx(selected_prim, x, y);
+  	 	 selected_x = x;
+  	 	 selected_y = y;
+         ptr++;
       }
       printf ("\n");
    }
@@ -224,6 +267,16 @@ void mouse(int btn, int state, int x, int y){
 	GLint hits;
 	GLint viewport[4];
 	int i;
+	if(btn == GLUT_LEFT_BUTTON && state == GLUT_UP){
+		//finish dragging object
+		if(selected_prim && selected_vrtx){
+			editVrtx(selected_vrtx, selected_x, selected_y);
+			selected_x = 0;
+			selected_y = 0;
+			selected_vrtx = NULL;
+			selected_prim = NULL;
+		}
+	}
 
     if(btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
     	if(drawing_mode == -1){
@@ -240,7 +293,7 @@ void mouse(int btn, int state, int x, int y){
   			glPushMatrix();
   			glLoadIdentity();
 
-  			gluPickMatrix( (GLdouble) x, (GLdouble) y, 100, 100, viewport);
+  			gluPickMatrix( (GLdouble) x, (GLdouble) y, 50, 50, viewport);
   			gluOrtho2D(0, w, 0, h);
 
   			drawPrims();
@@ -251,17 +304,24 @@ void mouse(int btn, int state, int x, int y){
 
   			render_mode = GL_RENDER;
     		hits = glRenderMode(render_mode);
-    		processHits(hits, nameBuffer);
+    		processHits(hits, nameBuffer, x, y);
     	}else{
     		if(last_vrtx == NULL){
     			startNewPrim(mouse_x, mouse_y);
     		}else{
     			addVrtx(last_vrtx, mouse_x, mouse_y);
-
     		};
     	};	
     }
 	glutPostRedisplay();
+}
+
+void motion(int x, int y){
+	if(selected_prim != NULL){
+		selected_x = x;
+		selected_y = y;
+		glutPostRedisplay();
+	}
 }
 
 void passiveMotion(int x, int y){
@@ -326,6 +386,7 @@ int main(int argc, char** argv)
     glutReshapeFunc(reshape);
     glutDisplayFunc(display); 
     glutMouseFunc(mouse);
+    glutMotionFunc(motion);
     glutPassiveMotionFunc(passiveMotion);
     glutKeyboardFunc(keyboard);
 
