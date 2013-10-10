@@ -46,7 +46,7 @@ int h=800;
 int mouse_x = 0;
 int mouse_y = 0;
 
-int drawing_mode=GL_POLYGON;
+int drawing_mode=GL_POINTS;
 float line_width = 1;
 Color3f color = {1.0, 1.0, 1.0};
 int render_mode = GL_RENDER;
@@ -120,7 +120,7 @@ void printAll(){
 	Primitive *prim = head_prim;
 	printf("Primitives:\n");
 	while(prim != NULL){
-		printf("prim:");
+		printf("prim %d:", prim->name);
 		Vertex *vrtx = prim->nxt_vrtx;
 		while(vrtx != NULL){
         	printf("(%d, %d) ", vrtx->point.x, vrtx->point.y);
@@ -139,7 +139,6 @@ void drawPrim(Primitive *prim){
 	glLineWidth(prim->line_width);
 	if(render_mode == GL_SELECT){ 
 		glLoadName(prim->name);
-		//printf("I write specific name\n");
 	}
     glBegin(prim->mode);
     	while(vrtx != NULL){
@@ -174,7 +173,7 @@ void drawPrimInteract(Primitive *prim){
 }
 
 void display() {
-	printAll();
+	//printAll();
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
     drawPrims();
@@ -201,6 +200,25 @@ void reshape(int new_w, int new_h)
 //inetraction with user
 //------------
 
+void processHits (GLint hits, GLuint buffer[]){
+   unsigned int i, j;
+   GLuint names, *ptr;
+
+   printf ("hits = %d\n", hits);
+   ptr = (GLuint *) buffer;
+   for (i = 0; i < hits; i++) { /*  for each hit  */
+      names = *ptr;
+      // printf (" number of names for hit = %d\n", names); ptr++;
+      // printf("  z1 is %g;", (float) *ptr/0x7fffffff); ptr++;
+      // printf(" z2 is %g\n", (float) *ptr/0x7fffffff); ptr++;
+      // printf ("   the name is ");
+      // for (j = 0; j < names; j++) {     /*  for each name */
+      //    printf ("%d ", *ptr); ptr++;
+      // }
+      // printf ("\n");
+   }
+} 
+
 void mouse(int btn, int state, int x, int y){
 	GLuint nameBuffer[100];
 	GLint hits;
@@ -209,7 +227,7 @@ void mouse(int btn, int state, int x, int y){
 
     if(btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
     	if(drawing_mode == -1){
-    		printf("inside\n");
+    		//printf("inside\n");
     		glSelectBuffer(100, nameBuffer);
     		render_mode = GL_SELECT;
     		glRenderMode(render_mode);
@@ -220,8 +238,17 @@ void mouse(int btn, int state, int x, int y){
   			glPushMatrix();
   			glLoadIdentity();
 
-    		gluPickMatrix(x, viewport[3]-y, 100, 100, viewport);
-    		gluOrtho2D(x-100, x+100, (viewport[3]-y)-100, (viewport[3]-y)+100);
+  			printAll();
+  			int new_y = y; //viewport[3]-y
+  			int minx = 0; //x - 100;
+  			int maxx = w;//x + 100;
+  			int miny = 0;//new_y - 100;
+  			int maxy = h; //new_y + 100;
+  			printf("x:%d y:%d\n", x, new_y);
+  			printf("gluOrtho2D: %d %d %d %d\n", minx, maxx, maxy, miny);
+  			printf("--------------\n");
+    		//gluPickMatrix(x, new_y, 100, 100, viewport);
+    		gluOrtho2D(minx, maxx, maxy, miny);
     		drawPrims();
 
     		glPopMatrix();
@@ -229,15 +256,7 @@ void mouse(int btn, int state, int x, int y){
 
     		render_mode = GL_RENDER;
     		hits = glRenderMode(render_mode);
-    		printf("Maciek: %d\n", hits);
-
-    		int *ptr=(int*)nameBuffer;
-
-    		for(i =0; i< hits; i++){
-				ptr +=3;
-				printf("%d\n", *ptr);
-    		}
-
+    		processHits(hits, nameBuffer);
     	}else{
     		if(last_vrtx == NULL){
     			startNewPrim(mouse_x, mouse_y);
