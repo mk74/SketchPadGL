@@ -208,14 +208,14 @@ void processHits (GLint hits, GLuint buffer[]){
    ptr = (GLuint *) buffer;
    for (i = 0; i < hits; i++) { /*  for each hit  */
       names = *ptr;
-      // printf (" number of names for hit = %d\n", names); ptr++;
-      // printf("  z1 is %g;", (float) *ptr/0x7fffffff); ptr++;
-      // printf(" z2 is %g\n", (float) *ptr/0x7fffffff); ptr++;
-      // printf ("   the name is ");
-      // for (j = 0; j < names; j++) {     /*  for each name */
-      //    printf ("%d ", *ptr); ptr++;
-      // }
-      // printf ("\n");
+      printf (" number of names for hit = %d\n", names); ptr++;
+      printf("  z1 is %g;", (float) *ptr/0x7fffffff); ptr++;
+      printf(" z2 is %g\n", (float) *ptr/0x7fffffff); ptr++;
+      printf ("   the name is ");
+      for (j = 0; j < names; j++) {     /*  for each name */
+         printf ("%d ", *ptr); ptr++;
+      }
+      printf ("\n");
    }
 } 
 
@@ -227,34 +227,29 @@ void mouse(int btn, int state, int x, int y){
 
     if(btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
     	if(drawing_mode == -1){
-    		//printf("inside\n");
     		glSelectBuffer(100, nameBuffer);
     		render_mode = GL_SELECT;
     		glRenderMode(render_mode);
     		glInitNames();
     		glPushName(0);
+    		glSelectBuffer(100, nameBuffer);
 
     		glGetIntegerv(GL_VIEWPORT, viewport);
+    		glMatrixMode(GL_PROJECTION);
+
   			glPushMatrix();
   			glLoadIdentity();
 
-  			printAll();
-  			int new_y = y; //viewport[3]-y
-  			int minx = 0; //x - 100;
-  			int maxx = w;//x + 100;
-  			int miny = 0;//new_y - 100;
-  			int maxy = h; //new_y + 100;
-  			printf("x:%d y:%d\n", x, new_y);
-  			printf("gluOrtho2D: %d %d %d %d\n", minx, maxx, maxy, miny);
-  			printf("--------------\n");
-    		//gluPickMatrix(x, new_y, 100, 100, viewport);
-    		gluOrtho2D(minx, maxx, maxy, miny);
-    		drawPrims();
+  			gluPickMatrix( (GLdouble) x, (GLdouble) y, 100, 100, viewport);
+  			gluOrtho2D(0, w, 0, h);
 
-    		glPopMatrix();
-    		glFlush();
+  			drawPrims();
+  			glMatrixMode(GL_PROJECTION);
 
-    		render_mode = GL_RENDER;
+  			glPopMatrix();
+  			glFlush();
+
+  			render_mode = GL_RENDER;
     		hits = glRenderMode(render_mode);
     		processHits(hits, nameBuffer);
     	}else{
