@@ -78,17 +78,17 @@ float calcDistance(int x1, int y1, int x2, int y2){
 Vertex* findNearestVrtx(Primitive *prim, int x, int y){ //TODO do on list of primitives
 	float min_dist, current_dist;
 	Vertex *min_vrtx = prim->nxt_vrtx;
-	min_dist = calcDistance(the_nearest->point.x, the_nearest->point.y, x, y);
+	min_dist = calcDistance(min_vrtx->point.x, min_vrtx->point.y, x, y);
 	Vertex *current_vrtx = min_vrtx->nxt_vrtx;
 	while(current_vrtx != NULL){
-		current_dist = calcDistance(current_vrtx->point.x, current_vrtx->point.y, x, y)
+		current_dist = calcDistance(current_vrtx->point.x, current_vrtx->point.y, x, y);
 		if(current_dist < min_dist){
 			min_vrtx = current_vrtx;
 			min_dist = current_dist;
 		}
 		current_vrtx = current_vrtx->nxt_vrtx;
 	}
-	return the_nearest;
+	return min_vrtx;
 }
 
 void startNewPrim(int x, int y){
