@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <GLUT/glut.h>
-
+#define SIZE 100
+#define PULSATING_INTERVAL 100
 //----------
 //data structures
 //----------
@@ -53,6 +54,7 @@ int drawing_mode=GL_TRIANGLES;
 float line_width = 1;
 Color3f color = {1.0, 1.0, 1.0};
 int render_mode = GL_RENDER;
+int pulsating_time = 0;
 
 
 
@@ -131,7 +133,7 @@ Primitive* findPrim(int name){
 }
 
 
-void printAll(){
+void printAllPrims(){
 	Primitive *prim = head_prim;
 	printf("Primitives:\n");
 	while(prim != NULL){
@@ -160,6 +162,7 @@ void printSelectedPrim(){
 //Displaying
 
 void drawPrim(Primitive *prim){
+	//draw prim, if SELECT mode add its name to stack
 	Vertex *vrtx = prim->nxt_vrtx;
 	glColor3f(prim->color.x, prim->color.y, prim->color.z);
 	glLineWidth(prim->line_width);
@@ -172,6 +175,17 @@ void drawPrim(Primitive *prim){
         	vrtx = vrtx->nxt_vrtx;
         }
     glEnd();
+    //highlight vertexes if we are in non-drawing mode
+    if(drawing_mode == -1){
+    	glColor3f(1.0, 1.0, 1.0);
+    	Vertex *vrtx = prim->nxt_vrtx;
+    	glBegin(GL_POINTS);
+    		while(vrtx != NULL){
+    			glVertex2i(vrtx->point.x, vrtx->point.y);
+    			vrtx = vrtx->nxt_vrtx;
+    		}
+    	glEnd();
+    }
 }
 
 void drawPrimInteract(Primitive *prim){
@@ -215,12 +229,24 @@ void display() {
 	printSelectedPrim();
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
-    drawPrims();
-    if(last_prim != NULL && last_vrtx != NULL)
-    	drawPrimInteract(last_prim);
-    // if(selected_prim != NULL)
-    // 	drawPrimInteract(selected_prim);
+    if(drawing_mode == -1)
+    	glPointSize( 4.0);
+    if(pulsating_time < PULSATING_INTERVAL){
+    	drawPrims();
+    	if(last_prim != NULL && last_vrtx != NULL)
+    		drawPrimInteract(last_prim);
+    }
     glFlush();
+}
+
+void idle() {
+	if(drawing_mode==-2){
+		if(pulsating_time < PULSATING_INTERVAL*2)
+			pulsating_time++;
+		else
+			pulsating_time=0;
+		glutPostRedisplay();
+	}
 }
 
 void reshape(int new_w, int new_h)
@@ -368,6 +394,12 @@ void keyboard(unsigned char key, int x, int y){
 		case 'd':
 			drawing_mode = -1;
 			break;
+		case 'e':
+			drawing_mode = -2;
+			break;
+	}
+	if(drawing_mode!=-2){
+		pulsating_time=0;
 	}
 }
 
@@ -385,6 +417,7 @@ int main(int argc, char** argv)
 
     glutReshapeFunc(reshape);
     glutDisplayFunc(display); 
+    glutIdleFunc(idle);
     glutMouseFunc(mouse);
     glutMotionFunc(motion);
     glutPassiveMotionFunc(passiveMotion);
