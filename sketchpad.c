@@ -253,7 +253,9 @@ void display() {
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
     if(drawing_mode == -1)
-    	glPointSize( 4.0);
+    	glPointSize(4.0);
+    else
+    	glPointSize(1.0);
     if(pulsating_time < PULSATING_INTERVAL){
     	drawPrims();
     	if(last_prim != NULL && last_vrtx != NULL)
