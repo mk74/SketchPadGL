@@ -66,7 +66,6 @@ void startNewPrim(int x, int y);
 Primitive* findPrim(int name);
 void destroyPrim(Primitive *prim);
 void destroyPrims();
-void printSelectedPrim();
 void printAllPrims();
 
 void drawPrim(Primitive *prim);
@@ -151,7 +150,7 @@ void editVrtx(Vertex *vrtx, int x, int y)
 }
 
 Vertex* findNearestVrtx(Primitive *prim, int x, int y)
-{ //TODO do on list of primitives
+{
 	float min_dist, current_dist;
 	Vertex *min_vrtx = prim->nxt_vrtx;
 	min_dist = calcDistance(min_vrtx->point.x, min_vrtx->point.y, x, y);
@@ -231,19 +230,6 @@ void destroyPrims()
 	last_prim = NULL;
 	head_prim = NULL;
 	last_name = 0;
-}
-
-void printSelectedPrim()
-{
-	printf("Selected prim:\n");
-	if(selected_prim != NULL){
-		 	Vertex *vrtx = selected_prim->nxt_vrtx;
-		 	while(vrtx != NULL){
-        		printf("(%d, %d) ", vrtx->point.x, vrtx->point.y);
-        		vrtx = vrtx->nxt_vrtx;
-         	}
-         }
-         printf("\n\n");
 }
 
 void printAllPrims()
@@ -362,23 +348,36 @@ void processHits (GLint hits, GLuint buffer[], int x, int y)
 {
    unsigned int i, j;
    GLuint names, *ptr;
+   float difference;
+   Primitive *prim;
+   Vertex *vrtx;
+   selected_prim = NULL;
+   selected_vrtx = NULL;
 
-   printf ("hits = %d\n", hits);
    ptr = (GLuint *) buffer;
    for (i = 0; i < hits; i++) { /*  for each hit  */
       names = *ptr;
       ptr++; ptr++; ptr++;
-      printf ("   the name is ");
-      for (j = 0; j < names; j++) {     /*  for each name */
-         printf ("%d ", *ptr); 
-   	     selected_prim = findPrim(*ptr);
-  	 	 selected_vrtx = findNearestVrtx(selected_prim, x, y);
-  	 	 selected_x = x;
-  	 	 selected_y = y;
+      //find the nearest vertex from click:
+      for (j = 0; j < names; j++) { 
+   	     prim = findPrim(*ptr);
+  	 	 vrtx = findNearestVrtx(prim, x, y); //finds the nearest vertex of specific primitve from click
+  	 	 if(selected_vrtx==NULL){
+  	 	 	selected_prim = prim;
+  	 	 	selected_vrtx = vrtx;
+  	 	 }else{
+  	 	 	difference = calcDistance(vrtx->point.x, vrtx->point.y, x, y);
+  	 	 	if(difference < calcDistance(selected_vrtx->point.x, selected_vrtx->point.y, x, y)){
+  	 	 		selected_prim = prim;
+  	 	 		selected_vrtx = vrtx;
+  	 	 	}
+  	 	 }
          ptr++;
       }
-      printf ("\n");
    }
+   selected_x = x;
+   selected_y = y;
+
 } 
 
 //----------
@@ -503,7 +502,6 @@ void buildPopupMenu()
 
 void display() 
 {
-	printSelectedPrim();
     glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
     if(drawing_mode == -1)
@@ -672,6 +670,7 @@ void passiveMotion(int x, int y)
 //------------
 //Main program
 //------------
+
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
