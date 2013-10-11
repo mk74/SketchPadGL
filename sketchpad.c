@@ -2,8 +2,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <GLUT/glut.h>
-#define SIZE 100
+#define HIT_LIST_SIZE 100
+#define PICK_SIZE 50
+
 #define PULSATING_INTERVAL 100
+#define POINT_SIZE 1.0
+#define BACKGROUND_COLOR_R 0.0
+#define BACKGROUND_COLOR_G 0.0
+#define BACKGROUND_COLOR_B 0.0
+
+#define HIGHLIGHT_POINT_SIZE 4.0
+#define HIGHLIGHT_COLOR_R 1.0
+#define HIGHLIGHT_COLOR_G 1.0
+#define HIGHLIGHT_COLOR_B 1.0
+
+#define START_COLOR_R 0.0
+#define START_COLOR_G 0.0
+#define START_COLOR_B 1.0
+#define START_LINE_WIDTH 1
+#define START_W 800
+#define START_H 800
+#define START_DRAWING_MODE GL_TRIANGLES
+
+
 //----------
 //data structures
 //----------
@@ -44,15 +65,15 @@ int selected_y = 0;
 //global variables
 //----------
 
-int w=800;
-int h=800;
+int w=START_W;
+int h=START_H;
 
 int mouse_x = 0;
 int mouse_y = 0;
 
-int drawing_mode=GL_TRIANGLES;
-float line_width = 1;
-Color3f color = {0.0, 0.0, 1.0};
+int drawing_mode=START_DRAWING_MODE;
+float line_width = START_LINE_WIDTH;
+Color3f color = {START_COLOR_R, START_COLOR_G, START_COLOR_B};
 int render_mode = GL_RENDER;
 int pulsating_time = 0;
 
@@ -177,7 +198,7 @@ void drawPrim(Primitive *prim){
     glEnd();
     //highlight vertexes if we are in non-drawing mode
     if(drawing_mode == -1){
-    	glColor3f(1.0, 1.0, 1.0);
+    	glColor3f(HIGHLIGHT_COLOR_R, HIGHLIGHT_COLOR_G, HIGHLIGHT_COLOR_B);
     	Vertex *vrtx = prim->nxt_vrtx;
     	glBegin(GL_POINTS);
     		while(vrtx != NULL){
@@ -250,12 +271,12 @@ void destroyPrims(){
 
 void display() {
 	printSelectedPrim();
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
     if(drawing_mode == -1)
-    	glPointSize(4.0);
+    	glPointSize(HIGHLIGHT_POINT_SIZE);
     else
-    	glPointSize(1.0);
+    	glPointSize(POINT_SIZE);
     if(pulsating_time < PULSATING_INTERVAL){
     	drawPrims();
     	if(last_prim != NULL && last_vrtx != NULL)
@@ -314,7 +335,7 @@ void processHits (GLint hits, GLuint buffer[], int x, int y){
 } 
 
 void mouse(int btn, int state, int x, int y){
-	GLuint nameBuffer[100];
+	GLuint nameBuffer[HIT_LIST_SIZE];
 	GLint hits;
 	GLint viewport[4];
 	int i;
@@ -331,12 +352,11 @@ void mouse(int btn, int state, int x, int y){
 
     if(btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
     	if(drawing_mode == -1){
-    		glSelectBuffer(100, nameBuffer);
+    		glSelectBuffer(HIT_LIST_SIZE, nameBuffer);
     		render_mode = GL_SELECT;
     		glRenderMode(render_mode);
     		glInitNames();
     		glPushName(0);
-    		glSelectBuffer(100, nameBuffer);
 
     		glGetIntegerv(GL_VIEWPORT, viewport);
     		glMatrixMode(GL_PROJECTION);
@@ -344,7 +364,7 @@ void mouse(int btn, int state, int x, int y){
   			glPushMatrix();
   			glLoadIdentity();
 
-  			gluPickMatrix( (GLdouble) x, (GLdouble) y, 50, 50, viewport);
+  			gluPickMatrix( (GLdouble) x, (GLdouble) y, PICK_SIZE, PICK_SIZE, viewport);
   			gluOrtho2D(0, w, 0, h);
 
   			drawPrims();
@@ -388,7 +408,7 @@ void randomizeColor(){
 }
 
 void randomizeLineWidth(){
-	line_width = rand()%5;
+	line_width = rand()%10;
 }
 
 void finishObject(){
