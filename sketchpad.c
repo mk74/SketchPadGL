@@ -32,9 +32,9 @@ typedef struct Primitive {
 
 Primitive *head_prim = NULL; 
 Primitive *last_prim = NULL;
-
 Vertex *last_vrtx = NULL; //keep last point of last prim
 int last_name=0;
+
 Vertex *selected_vrtx = NULL;
 Primitive *selected_prim = NULL;
 int selected_x = 0;
@@ -225,6 +225,29 @@ void drawPrims(){
 	}
 }
 
+void destroyPrim(Primitive *prim){
+	Vertex *vrtx = prim->nxt_vrtx;
+    while(vrtx != NULL){
+       	Vertex *tmp_vrtx = vrtx->nxt_vrtx;
+       	free(vrtx);
+        vrtx = tmp_vrtx;
+    }
+    free(prim);	
+}
+
+void destroyPrims(){
+	Primitive *prim = head_prim;
+	while(prim != NULL){
+		Primitive *tmp_prim = prim->nxt_prim;
+		destroyPrim(prim);
+		prim = tmp_prim;
+	}
+	last_vrtx = NULL;
+	last_prim = NULL;
+	head_prim = NULL;
+	last_name = 0;
+}
+
 void display() {
 	printSelectedPrim();
     glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -397,16 +420,55 @@ void keyboard(unsigned char key, int x, int y){
 		case 'e':
 			drawing_mode = -2;
 			break;
+		case 'c':
+			destroyPrims();
+			glutPostRedisplay();
+			break;
 	}
 	if(drawing_mode!=-2){
 		pulsating_time=0;
 	}
 }
 
+void mainMenu(int value){
+	
+}
+
+void drawingModeMenu(int drawing_mode){
+
+}
+
+void colorMenu(int color){
+
+}
+
+void lineWidthMenu(int size){
+
+}
+
+
+void buildPopupMenu(){
+	int main_menu, color_menu, line_width_menu, drawing_mode_menu;
+	drawing_mode_menu = glutCreateMenu(drawingModeMenu);
+		glutAddMenuEntry("Randomized", 0);
+	color_menu = glutCreateMenu(colorMenu);
+		glutAddMenuEntry("Randomize", 0);
+	line_width_menu = glutCreateMenu(lineWidthMenu);
+		glutAddMenuEntry("Randomize", 0);
+	main_menu = glutCreateMenu(mainMenu);
+		glutAddMenuEntry("Select", -1);
+		glutAddSubMenu("Draw", drawing_mode_menu);
+		glutAddSubMenu("Colors", color_menu);
+		glutAddSubMenu("Line width", line_width_menu);
+		glutAddMenuEntry("Pulsating effect", -2);
+    	glutAddMenuEntry("Clear screen", 1);
+    	glutAddMenuEntry("Exit", 2);
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+}
+
 //------------
 //Main program
 //------------
-
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
@@ -414,6 +476,7 @@ int main(int argc, char** argv)
     glutInitWindowSize(w, h);
     glutInitWindowPosition(0, 0);
     glutCreateWindow("Sketchpad");
+    buildPopupMenu();
 
     glutReshapeFunc(reshape);
     glutDisplayFunc(display); 
