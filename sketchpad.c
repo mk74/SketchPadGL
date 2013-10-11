@@ -69,9 +69,9 @@ void destroyPrims();
 void printSelectedPrim();
 void printAllPrims();
 
+void drawPrim(Primitive *prim);
 void drawPrimInteract(Primitive *prim);
 void drawDraggedPrim(Primitive *prim, Vertex *vrtx, int x, int y);
-void drawPrim(Primitive *prim);
 void drawPrims();
 
 //helper functions
@@ -131,7 +131,7 @@ int pulsating_time = 0;
 
 
 //----------
-//Managing data structure
+//Vertexes(data structure)
 //----------
 
 void addVrtx(Vertex *vrtx, int x, int y)
@@ -150,11 +150,6 @@ void editVrtx(Vertex *vrtx, int x, int y)
 	vrtx->point.y = y;
 }
 
-float calcDistance(int x1, int y1, int x2, int y2)
-{
-	return sqrt(pow(x2-x1, 2) + pow(y2 - y1, 2));
-}
-
 Vertex* findNearestVrtx(Primitive *prim, int x, int y)
 { //TODO do on list of primitives
 	float min_dist, current_dist;
@@ -171,6 +166,10 @@ Vertex* findNearestVrtx(Primitive *prim, int x, int y)
 	}
 	return min_vrtx;
 }
+
+//----------
+//Primitives (data structures/ drawing)
+//----------
 
 void startNewPrim(int x, int y)
 {
@@ -209,6 +208,43 @@ Primitive* findPrim(int name)
 	return NULL;
 }
 
+void destroyPrim(Primitive *prim)
+{
+	Vertex *vrtx = prim->nxt_vrtx;
+    while(vrtx != NULL){
+       	Vertex *tmp_vrtx = vrtx->nxt_vrtx;
+       	free(vrtx);
+        vrtx = tmp_vrtx;
+    }
+    free(prim);	
+}
+
+void destroyPrims()
+{
+	Primitive *prim = head_prim;
+	while(prim != NULL){
+		Primitive *tmp_prim = prim->nxt_prim;
+		destroyPrim(prim);
+		prim = tmp_prim;
+	}
+	last_vrtx = NULL;
+	last_prim = NULL;
+	head_prim = NULL;
+	last_name = 0;
+}
+
+void printSelectedPrim()
+{
+	printf("Selected prim:\n");
+	if(selected_prim != NULL){
+		 	Vertex *vrtx = selected_prim->nxt_vrtx;
+		 	while(vrtx != NULL){
+        		printf("(%d, %d) ", vrtx->point.x, vrtx->point.y);
+        		vrtx = vrtx->nxt_vrtx;
+         	}
+         }
+         printf("\n\n");
+}
 
 void printAllPrims()
 {
@@ -225,20 +261,8 @@ void printAllPrims()
         prim = prim->nxt_prim;
 	}
 }
-void printSelectedPrim()
-{
-	printf("Selected prim:\n");
-	if(selected_prim != NULL){
-		 	Vertex *vrtx = selected_prim->nxt_vrtx;
-		 	while(vrtx != NULL){
-        		printf("(%d, %d) ", vrtx->point.x, vrtx->point.y);
-        		vrtx = vrtx->nxt_vrtx;
-         	}
-         }
-         printf("\n\n");
-}
 
-//Displaying
+//privimites drawing
 
 void drawPrim(Primitive *prim)
 {
@@ -308,75 +332,31 @@ void drawPrims()
 	}
 }
 
-void destroyPrim(Primitive *prim)
+//----------
+//Helper functions
+//----------
+
+float calcDistance(int x1, int y1, int x2, int y2)
 {
-	Vertex *vrtx = prim->nxt_vrtx;
-    while(vrtx != NULL){
-       	Vertex *tmp_vrtx = vrtx->nxt_vrtx;
-       	free(vrtx);
-        vrtx = tmp_vrtx;
-    }
-    free(prim);	
+	return sqrt(pow(x2-x1, 2) + pow(y2 - y1, 2));
 }
 
-void destroyPrims()
+void randomizeColor()
 {
-	Primitive *prim = head_prim;
-	while(prim != NULL){
-		Primitive *tmp_prim = prim->nxt_prim;
-		destroyPrim(prim);
-		prim = tmp_prim;
-	}
+	color.r = (float)rand()/(float)RAND_MAX;
+	color.g = (float)rand()/(float)RAND_MAX;
+	color.b = (float)rand()/(float)RAND_MAX;	
+}
+
+void randomizeLineWidth()
+{
+	line_width = rand()%10;
+}
+
+void finishObject()
+{
 	last_vrtx = NULL;
-	last_prim = NULL;
-	head_prim = NULL;
-	last_name = 0;
 }
-
-void display() 
-{
-	printSelectedPrim();
-    glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    if(drawing_mode == -1)
-    	glPointSize(HIGHLIGHT_POINT_SIZE);
-    else
-    	glPointSize(POINT_SIZE);
-    if(pulsating_time < PULSATING_INTERVAL){
-    	drawPrims();
-    	if(last_prim != NULL && last_vrtx != NULL)
-    		drawPrimInteract(last_prim);
-    }
-    glFlush();
-}
-
-void idle() 
-{
-	if(drawing_mode==-2){
-		if(pulsating_time < PULSATING_INTERVAL*2)
-			pulsating_time++;
-		else
-			pulsating_time=0;
-		glutPostRedisplay();
-	}
-}
-
-void reshape(int new_w, int new_h)
-{
-  w = new_w;
-  h = new_h;
-  glViewport(0, 0, w, h);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0, w, h, 0);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glEnable(GL_COLOR_LOGIC_OP);
-}
-
-//------------
-//inetraction with user
-//------------
 
 void processHits (GLint hits, GLuint buffer[], int x, int y)
 {
@@ -401,147 +381,9 @@ void processHits (GLint hits, GLuint buffer[], int x, int y)
    }
 } 
 
-void mouse(int btn, int state, int x, int y)
-{
-	GLuint nameBuffer[HIT_LIST_SIZE];
-	GLint hits;
-	GLint viewport[4];
-	int i;
-	if(btn == GLUT_LEFT_BUTTON && state == GLUT_UP){
-		//finish dragging object
-		if(selected_prim && selected_vrtx){
-			editVrtx(selected_vrtx, selected_x, selected_y);
-			selected_x = 0;
-			selected_y = 0;
-			selected_vrtx = NULL;
-			selected_prim = NULL;
-		}
-	}
-
-    if(btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-    	if(drawing_mode == -1){
-    		glSelectBuffer(HIT_LIST_SIZE, nameBuffer);
-    		render_mode = GL_SELECT;
-    		glRenderMode(render_mode);
-    		glInitNames();
-    		glPushName(0);
-
-    		glGetIntegerv(GL_VIEWPORT, viewport);
-    		glMatrixMode(GL_PROJECTION);
-
-  			glPushMatrix();
-  			glLoadIdentity();
-
-  			gluPickMatrix( (GLdouble) x, (GLdouble) y, PICK_SIZE, PICK_SIZE, viewport);
-  			gluOrtho2D(0, w, 0, h);
-
-  			drawPrims();
-  			glMatrixMode(GL_PROJECTION);
-
-  			glPopMatrix();
-  			glFlush();
-
-  			render_mode = GL_RENDER;
-    		hits = glRenderMode(render_mode);
-    		processHits(hits, nameBuffer, x, y);
-    	}else{
-    		if(last_vrtx == NULL){
-    			startNewPrim(mouse_x, mouse_y);
-    		}else{
-    			addVrtx(last_vrtx, mouse_x, mouse_y);
-    		};
-    	};	
-    }
-	glutPostRedisplay();
-}
-
-void motion(int x, int y)
-{
-	if(selected_prim != NULL){
-		selected_x = x;
-		selected_y = y;
-		glutPostRedisplay();
-	}
-}
-
-void passiveMotion(int x, int y)
-{
-	mouse_x = x;
-	mouse_y = y;
-	glutPostRedisplay();
-}
-
-void randomizeColor()
-{
-	color.r = (float)rand()/(float)RAND_MAX;
-	color.g = (float)rand()/(float)RAND_MAX;
-	color.b = (float)rand()/(float)RAND_MAX;	
-}
-
-void randomizeLineWidth()
-{
-	line_width = rand()%10;
-}
-
-void finishObject()
-{
-	last_vrtx = NULL;
-}
-
-void keyboard(unsigned char key, int x, int y)
-{
-	int should_finish_object=1;
-	switch(key){
-		case 27: //ESCAPE
-			exit(0);
-			break;
-		case 'p':
-			drawing_mode = GL_POINTS;
-			break;
-		case 'l':
-			drawing_mode = GL_LINES;
-			break;
-		case 's':
-			drawing_mode = GL_LINE_STRIP;
-			break;
-		case 'o':
-			drawing_mode = GL_LINE_LOOP;
-			break;
-		case 'y':
-			drawing_mode = GL_POLYGON;
-			break;
-		case 't':
-			drawing_mode = GL_TRIANGLES;
-			break;
-		case 'r':
-			randomizeColor();
-			break;
-		case 'w':
-			randomizeLineWidth();
-			break;
-		case 'd':
-			drawing_mode = -1;
-			break;
-		case 'e':
-			drawing_mode = -2;
-			break;
-		case 'c':
-			destroyPrims();
-			glutPostRedisplay();
-			break;
-		default:
-			should_finish_object = 0;
-			break;
-
-	}
-	if(should_finish_object || key == 32){ //user clicked space
-		finishObject();
-		glutPostRedisplay();
-	}
-	if(drawing_mode!=-2){
-		pulsating_time=0;
-	}
-}
+//----------
+//Popup menu
+//----------
 
 void mainMenu(int value)
 {
@@ -652,6 +494,179 @@ void buildPopupMenu()
     	glutAddMenuEntry("Clear screen", 1);
     	glutAddMenuEntry("Exit", 2);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
+}
+
+//----------
+//Glut Callbacks (display/interaction)
+//----------
+
+
+void display() 
+{
+	printSelectedPrim();
+    glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    if(drawing_mode == -1)
+    	glPointSize(HIGHLIGHT_POINT_SIZE);
+    else
+    	glPointSize(POINT_SIZE);
+    if(pulsating_time < PULSATING_INTERVAL){
+    	drawPrims();
+    	if(last_prim != NULL && last_vrtx != NULL)
+    		drawPrimInteract(last_prim);
+    }
+    glFlush();
+}
+
+void reshape(int new_w, int new_h)
+{
+  w = new_w;
+  h = new_h;
+  glViewport(0, 0, w, h);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, w, h, 0);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glEnable(GL_COLOR_LOGIC_OP);
+}
+
+void idle() 
+{
+	if(drawing_mode==-2){
+		if(pulsating_time < PULSATING_INTERVAL*2)
+			pulsating_time++;
+		else
+			pulsating_time=0;
+		glutPostRedisplay();
+	}
+}
+
+//inetraction with user
+
+void keyboard(unsigned char key, int x, int y)
+{
+	int should_finish_object=1;
+	switch(key){
+		case 27: //ESCAPE
+			exit(0);
+			break;
+		case 'p':
+			drawing_mode = GL_POINTS;
+			break;
+		case 'l':
+			drawing_mode = GL_LINES;
+			break;
+		case 's':
+			drawing_mode = GL_LINE_STRIP;
+			break;
+		case 'o':
+			drawing_mode = GL_LINE_LOOP;
+			break;
+		case 'y':
+			drawing_mode = GL_POLYGON;
+			break;
+		case 't':
+			drawing_mode = GL_TRIANGLES;
+			break;
+		case 'r':
+			randomizeColor();
+			break;
+		case 'w':
+			randomizeLineWidth();
+			break;
+		case 'd':
+			drawing_mode = -1;
+			break;
+		case 'e':
+			drawing_mode = -2;
+			break;
+		case 'c':
+			destroyPrims();
+			glutPostRedisplay();
+			break;
+		default:
+			should_finish_object = 0;
+			break;
+
+	}
+	if(should_finish_object || key == 32){ //user clicked space
+		finishObject();
+		glutPostRedisplay();
+	}
+	if(drawing_mode!=-2){
+		pulsating_time=0;
+	}
+}
+
+void mouse(int btn, int state, int x, int y)
+{
+	GLuint nameBuffer[HIT_LIST_SIZE];
+	GLint hits;
+	GLint viewport[4];
+	int i;
+	if(btn == GLUT_LEFT_BUTTON && state == GLUT_UP){
+		//finish dragging object
+		if(selected_prim && selected_vrtx){
+			editVrtx(selected_vrtx, selected_x, selected_y);
+			selected_x = 0;
+			selected_y = 0;
+			selected_vrtx = NULL;
+			selected_prim = NULL;
+		}
+	}
+
+    if(btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+    	if(drawing_mode == -1){
+    		glSelectBuffer(HIT_LIST_SIZE, nameBuffer);
+    		render_mode = GL_SELECT;
+    		glRenderMode(render_mode);
+    		glInitNames();
+    		glPushName(0);
+
+    		glGetIntegerv(GL_VIEWPORT, viewport);
+    		glMatrixMode(GL_PROJECTION);
+
+  			glPushMatrix();
+  			glLoadIdentity();
+
+  			gluPickMatrix( (GLdouble) x, (GLdouble) y, PICK_SIZE, PICK_SIZE, viewport);
+  			gluOrtho2D(0, w, 0, h);
+
+  			drawPrims();
+  			glMatrixMode(GL_PROJECTION);
+
+  			glPopMatrix();
+  			glFlush();
+
+  			render_mode = GL_RENDER;
+    		hits = glRenderMode(render_mode);
+    		processHits(hits, nameBuffer, x, y);
+    	}else{
+    		if(last_vrtx == NULL){
+    			startNewPrim(mouse_x, mouse_y);
+    		}else{
+    			addVrtx(last_vrtx, mouse_x, mouse_y);
+    		};
+    	};	
+    }
+	glutPostRedisplay();
+}
+
+void motion(int x, int y)
+{
+	if(selected_prim != NULL){
+		selected_x = x;
+		selected_y = y;
+		glutPostRedisplay();
+	}
+}
+
+void passiveMotion(int x, int y)
+{
+	mouse_x = x;
+	mouse_y = y;
+	glutPostRedisplay();
 }
 
 //------------
