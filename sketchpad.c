@@ -8,7 +8,7 @@
 //data structures
 //----------
 typedef struct Color3f {
-	float x, y, z;
+	float r, g, b;
 } Color3f;
 
 typedef struct Point {
@@ -52,7 +52,7 @@ int mouse_y = 0;
 
 int drawing_mode=GL_TRIANGLES;
 float line_width = 1;
-Color3f color = {1.0, 1.0, 1.0};
+Color3f color = {0.0, 0.0, 1.0};
 int render_mode = GL_RENDER;
 int pulsating_time = 0;
 
@@ -164,7 +164,7 @@ void printSelectedPrim(){
 void drawPrim(Primitive *prim){
 	//draw prim, if SELECT mode add its name to stack
 	Vertex *vrtx = prim->nxt_vrtx;
-	glColor3f(prim->color.x, prim->color.y, prim->color.z);
+	glColor3f(prim->color.r, prim->color.g, prim->color.b);
 	glLineWidth(prim->line_width);
 	if(render_mode == GL_SELECT){ 
 		glLoadName(prim->name);
@@ -379,14 +379,25 @@ void passiveMotion(int x, int y){
 	glutPostRedisplay();
 }
 
+void randomizeColor(){
+	color.r = (float)rand()/(float)RAND_MAX;
+	color.g = (float)rand()/(float)RAND_MAX;
+	color.b = (float)rand()/(float)RAND_MAX;	
+}
+
+void randomizeLineWidth(){
+	line_width = rand()%5;
+}
+
+void finishObject(){
+	last_vrtx = NULL;
+}
+
 void keyboard(unsigned char key, int x, int y){
+	int should_finish_object=1;
 	switch(key){
 		case 27: //ESCAPE
 			exit(0);
-			break;
-		case 32:
-			last_vrtx = NULL;
-			glutPostRedisplay();
 			break;
 		case 'p':
 			drawing_mode = GL_POINTS;
@@ -407,12 +418,10 @@ void keyboard(unsigned char key, int x, int y){
 			drawing_mode = GL_TRIANGLES;
 			break;
 		case 'r':
-			color.x = (float)rand()/(float)RAND_MAX;
-			color.y = (float)rand()/(float)RAND_MAX;
-			color.z = (float)rand()/(float)RAND_MAX;
+			randomizeColor();
 			break;
 		case 'w':
-			line_width = rand()%5;
+			randomizeLineWidth();
 			break;
 		case 'd':
 			drawing_mode = -1;
@@ -424,6 +433,14 @@ void keyboard(unsigned char key, int x, int y){
 			destroyPrims();
 			glutPostRedisplay();
 			break;
+		default:
+			should_finish_object = 0;
+			break;
+
+	}
+	if(should_finish_object || key == 32){ //user clicked space
+		finishObject();
+		glutPostRedisplay();
 	}
 	if(drawing_mode!=-2){
 		pulsating_time=0;
@@ -431,30 +448,100 @@ void keyboard(unsigned char key, int x, int y){
 }
 
 void mainMenu(int value){
-	
+	switch(value){
+		case -2:
+			finishObject();
+			drawing_mode = -2;
+			break;
+		case 1:
+			destroyPrims();
+			glutPostRedisplay();
+			break;
+		case 2: 
+			exit(0);
+			break;
+	}
 }
 
-void drawingModeMenu(int drawing_mode){
-
+void drawingModeMenu(int new_drawing_mode){
+	finishObject();
+	drawing_mode = new_drawing_mode;
+	glutPostRedisplay();
 }
 
-void colorMenu(int color){
-
+void colorMenu(int color_id){
+	finishObject();
+	switch(color_id){
+		case 0:
+			randomizeColor();
+			break;
+		case 1: //blue
+			color.r = 0.0;
+			color.g = 0.0;
+			color.b = 1.0;
+			break;
+		case 2: //green
+			color.r = 0.0;
+			color.g = 1.0;
+			color.b = 0.0;
+			break;
+		case 3: //purple
+			color.r = 0.0;
+			color.g = 1.0;
+			color.b = 0.0;
+			break;
+		case 4: //red
+			color.r = 1.0;
+			color.g = 0.0;
+			color.b = 0.0;
+			break;
+		case 5: //yellow
+			color.r = 1.0;
+			color.g = 1.0;
+			color.b = 0.0;
+			break;
+	}
+	glutPostRedisplay();
 }
 
 void lineWidthMenu(int size){
-
+	finishObject();
+	switch(size){
+		case 0:
+			randomizeLineWidth();
+			break;
+		default:
+			line_width = size;
+			break;
+	}
+	glutPostRedisplay();
 }
 
 
 void buildPopupMenu(){
 	int main_menu, color_menu, line_width_menu, drawing_mode_menu;
 	drawing_mode_menu = glutCreateMenu(drawingModeMenu);
-		glutAddMenuEntry("Randomized", 0);
+		glutAddMenuEntry("Points", GL_POINTS);
+		glutAddMenuEntry("Lines", GL_LINES);
+		glutAddMenuEntry("Line strip", GL_LINE_STRIP);
+		glutAddMenuEntry("Line loop", GL_LINE_LOOP);
+		glutAddMenuEntry("Polygon", GL_POLYGON);
+		glutAddMenuEntry("Triangles", GL_TRIANGLES);
 	color_menu = glutCreateMenu(colorMenu);
 		glutAddMenuEntry("Randomize", 0);
+		glutAddMenuEntry("Blue", 1);
+		glutAddMenuEntry("Green", 2);
+		glutAddMenuEntry("Purple", 3);
+		glutAddMenuEntry("Red", 4);
+		glutAddMenuEntry("Yellow", 5);
 	line_width_menu = glutCreateMenu(lineWidthMenu);
 		glutAddMenuEntry("Randomize", 0);
+		glutAddMenuEntry("1", 1);
+		glutAddMenuEntry("2", 2);
+		glutAddMenuEntry("4", 4);
+		glutAddMenuEntry("6", 6);
+		glutAddMenuEntry("8", 8);
+		glutAddMenuEntry("10", 10);
 	main_menu = glutCreateMenu(mainMenu);
 		glutAddMenuEntry("Select", -1);
 		glutAddSubMenu("Draw", drawing_mode_menu);
