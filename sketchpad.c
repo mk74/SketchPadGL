@@ -51,6 +51,60 @@ typedef struct Primitive {
 	struct Primitive *nxt_prim;
 } Primitive;
 
+//----------
+//functions
+//----------
+
+
+//Vertexes(data structure)
+void addVrtx(Vertex *vrtx, int x, int y);
+void editVrtx(Vertex *vrtx, int x, int y);
+Vertex* findNearestVrtx(Primitive *prim, int x, int y);
+
+//Primitives (data structures/ drawing)
+void startNewPrim(int x, int y);
+Primitive* findPrim(int name);
+void destroyPrim(Primitive *prim);
+void destroyPrims();
+void printSelectedPrim();
+void printAllPrims();
+
+void drawPrimInteract(Primitive *prim);
+void drawDraggedPrim(Primitive *prim, Vertex *vrtx, int x, int y);
+void drawPrim(Primitive *prim);
+void drawPrims();
+
+//helper functions
+float calcDistance(int x1, int y1, int x2, int y2);
+void randomizeColor();
+void randomizeLineWidth();
+void finishObject();
+void processHits (GLint hits, GLuint buffer[], int x, int y);
+
+//popup menu
+void mainMenu(int value);
+void drawingModeMenu(int new_drawing_mode);
+void colorMenu(int color_id);
+void lineWidthMenu(int size);
+void buildPopupMenu();
+
+//glut Callbacks ( display/interaction)
+void display();
+void reshape(int new_w, int new_h);
+void idle();
+
+void keyboard(unsigned char key, int x, int y);
+void mouse(int btn, int state, int x, int y);
+void motion(int x, int y);
+void passiveMotion(int x, int y);
+
+int main(int argc, char** argv);
+
+
+//----------
+//global variables
+//----------
+
 Primitive *head_prim = NULL; 
 Primitive *last_prim = NULL;
 Vertex *last_vrtx = NULL; //keep last point of last prim
@@ -60,10 +114,6 @@ Vertex *selected_vrtx = NULL;
 Primitive *selected_prim = NULL;
 int selected_x = 0;
 int selected_y = 0;
-
-//----------
-//global variables
-//----------
 
 int w=START_W;
 int h=START_H;
@@ -84,7 +134,8 @@ int pulsating_time = 0;
 //Managing data structure
 //----------
 
-void addVrtx(Vertex *vrtx, int x, int y){
+void addVrtx(Vertex *vrtx, int x, int y)
+{
 	Vertex *new_vrtx = malloc(sizeof(struct Vertex));
 	new_vrtx->point.x = x;
 	new_vrtx->point.y = y;
@@ -93,16 +144,19 @@ void addVrtx(Vertex *vrtx, int x, int y){
 	last_vrtx = new_vrtx;
 }
 
-void editVrtx(Vertex *vrtx, int x, int y){
+void editVrtx(Vertex *vrtx, int x, int y)
+{
 	vrtx->point.x = x;
 	vrtx->point.y = y;
 }
 
-float calcDistance(int x1, int y1, int x2, int y2){
+float calcDistance(int x1, int y1, int x2, int y2)
+{
 	return sqrt(pow(x2-x1, 2) + pow(y2 - y1, 2));
 }
 
-Vertex* findNearestVrtx(Primitive *prim, int x, int y){ //TODO do on list of primitives
+Vertex* findNearestVrtx(Primitive *prim, int x, int y)
+{ //TODO do on list of primitives
 	float min_dist, current_dist;
 	Vertex *min_vrtx = prim->nxt_vrtx;
 	min_dist = calcDistance(min_vrtx->point.x, min_vrtx->point.y, x, y);
@@ -118,7 +172,8 @@ Vertex* findNearestVrtx(Primitive *prim, int x, int y){ //TODO do on list of pri
 	return min_vrtx;
 }
 
-void startNewPrim(int x, int y){
+void startNewPrim(int x, int y)
+{
 	//create new primitive
 	Primitive *new_prim = malloc(sizeof(struct Primitive));
 	new_prim->name = ++last_name;
@@ -143,7 +198,8 @@ void startNewPrim(int x, int y){
 	last_vrtx = fst_vrtx;
 }
 
-Primitive* findPrim(int name){
+Primitive* findPrim(int name)
+{
 	Primitive *current=head_prim;
 	while( current != NULL ){
 		if( current->name == name)
@@ -154,7 +210,8 @@ Primitive* findPrim(int name){
 }
 
 
-void printAllPrims(){
+void printAllPrims()
+{
 	Primitive *prim = head_prim;
 	printf("Primitives:\n");
 	while(prim != NULL){
@@ -168,7 +225,8 @@ void printAllPrims(){
         prim = prim->nxt_prim;
 	}
 }
-void printSelectedPrim(){
+void printSelectedPrim()
+{
 	printf("Selected prim:\n");
 	if(selected_prim != NULL){
 		 	Vertex *vrtx = selected_prim->nxt_vrtx;
@@ -182,7 +240,8 @@ void printSelectedPrim(){
 
 //Displaying
 
-void drawPrim(Primitive *prim){
+void drawPrim(Primitive *prim)
+{
 	//draw prim, if SELECT mode add its name to stack
 	Vertex *vrtx = prim->nxt_vrtx;
 	glColor3f(prim->color.r, prim->color.g, prim->color.b);
@@ -209,7 +268,8 @@ void drawPrim(Primitive *prim){
     }
 }
 
-void drawPrimInteract(Primitive *prim){
+void drawPrimInteract(Primitive *prim)
+{
 	//erase part of primitive drawn so far
 	//adds new vertex where mouse is pointing at
 	//draws this primitive again
@@ -225,7 +285,8 @@ void drawPrimInteract(Primitive *prim){
 	glLogicOp(GL_COPY);
 }
 
-void drawDraggedPrim(Primitive *prim, Vertex *vrtx, int x, int y){
+void drawDraggedPrim(Primitive *prim, Vertex *vrtx, int x, int y)
+{
 	//drag one vertex 
 	//draw primitive
 	//drag back this vertex
@@ -235,7 +296,8 @@ void drawDraggedPrim(Primitive *prim, Vertex *vrtx, int x, int y){
 	editVrtx(vrtx, tmp_point.x, tmp_point.y);
 }
 
-void drawPrims(){
+void drawPrims()
+{
 	Primitive *prim = head_prim;
 	while(prim != NULL){
 		if(selected_prim!=prim)
@@ -246,7 +308,8 @@ void drawPrims(){
 	}
 }
 
-void destroyPrim(Primitive *prim){
+void destroyPrim(Primitive *prim)
+{
 	Vertex *vrtx = prim->nxt_vrtx;
     while(vrtx != NULL){
        	Vertex *tmp_vrtx = vrtx->nxt_vrtx;
@@ -256,7 +319,8 @@ void destroyPrim(Primitive *prim){
     free(prim);	
 }
 
-void destroyPrims(){
+void destroyPrims()
+{
 	Primitive *prim = head_prim;
 	while(prim != NULL){
 		Primitive *tmp_prim = prim->nxt_prim;
@@ -269,7 +333,8 @@ void destroyPrims(){
 	last_name = 0;
 }
 
-void display() {
+void display() 
+{
 	printSelectedPrim();
     glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -285,7 +350,8 @@ void display() {
     glFlush();
 }
 
-void idle() {
+void idle() 
+{
 	if(drawing_mode==-2){
 		if(pulsating_time < PULSATING_INTERVAL*2)
 			pulsating_time++;
@@ -312,7 +378,8 @@ void reshape(int new_w, int new_h)
 //inetraction with user
 //------------
 
-void processHits (GLint hits, GLuint buffer[], int x, int y){
+void processHits (GLint hits, GLuint buffer[], int x, int y)
+{
    unsigned int i, j;
    GLuint names, *ptr;
 
@@ -334,7 +401,8 @@ void processHits (GLint hits, GLuint buffer[], int x, int y){
    }
 } 
 
-void mouse(int btn, int state, int x, int y){
+void mouse(int btn, int state, int x, int y)
+{
 	GLuint nameBuffer[HIT_LIST_SIZE];
 	GLint hits;
 	GLint viewport[4];
@@ -387,7 +455,8 @@ void mouse(int btn, int state, int x, int y){
 	glutPostRedisplay();
 }
 
-void motion(int x, int y){
+void motion(int x, int y)
+{
 	if(selected_prim != NULL){
 		selected_x = x;
 		selected_y = y;
@@ -395,27 +464,32 @@ void motion(int x, int y){
 	}
 }
 
-void passiveMotion(int x, int y){
+void passiveMotion(int x, int y)
+{
 	mouse_x = x;
 	mouse_y = y;
 	glutPostRedisplay();
 }
 
-void randomizeColor(){
+void randomizeColor()
+{
 	color.r = (float)rand()/(float)RAND_MAX;
 	color.g = (float)rand()/(float)RAND_MAX;
 	color.b = (float)rand()/(float)RAND_MAX;	
 }
 
-void randomizeLineWidth(){
+void randomizeLineWidth()
+{
 	line_width = rand()%10;
 }
 
-void finishObject(){
+void finishObject()
+{
 	last_vrtx = NULL;
 }
 
-void keyboard(unsigned char key, int x, int y){
+void keyboard(unsigned char key, int x, int y)
+{
 	int should_finish_object=1;
 	switch(key){
 		case 27: //ESCAPE
@@ -469,7 +543,8 @@ void keyboard(unsigned char key, int x, int y){
 	}
 }
 
-void mainMenu(int value){
+void mainMenu(int value)
+{
 	switch(value){
 		case -2:
 			finishObject();
@@ -485,13 +560,15 @@ void mainMenu(int value){
 	}
 }
 
-void drawingModeMenu(int new_drawing_mode){
+void drawingModeMenu(int new_drawing_mode)
+{
 	finishObject();
 	drawing_mode = new_drawing_mode;
 	glutPostRedisplay();
 }
 
-void colorMenu(int color_id){
+void colorMenu(int color_id)
+{
 	finishObject();
 	switch(color_id){
 		case 0:
@@ -526,7 +603,8 @@ void colorMenu(int color_id){
 	glutPostRedisplay();
 }
 
-void lineWidthMenu(int size){
+void lineWidthMenu(int size)
+{
 	finishObject();
 	switch(size){
 		case 0:
@@ -540,7 +618,8 @@ void lineWidthMenu(int size){
 }
 
 
-void buildPopupMenu(){
+void buildPopupMenu()
+{
 	int main_menu, color_menu, line_width_menu, drawing_mode_menu;
 	drawing_mode_menu = glutCreateMenu(drawingModeMenu);
 		glutAddMenuEntry("Points", GL_POINTS);
