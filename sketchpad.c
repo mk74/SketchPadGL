@@ -106,7 +106,7 @@ int main(int argc, char** argv);
 
 Primitive *head_prim = NULL; 
 Primitive *last_prim = NULL;
-Vertex *last_vrtx = NULL; //keep last point of last prim
+Vertex *last_vrtx = NULL; //keep last point of last prim. If not NULL, primitive is not finished
 int last_name=0;
 
 Vertex *selected_vrtx = NULL;
