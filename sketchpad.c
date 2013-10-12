@@ -463,21 +463,21 @@ void buildPopupMenu()
 {
 	int main_menu, color_menu, line_width_menu, drawing_mode_menu;
 	drawing_mode_menu = glutCreateMenu(drawingModeMenu);
-		glutAddMenuEntry("Points", GL_POINTS);
-		glutAddMenuEntry("Lines", GL_LINES);
-		glutAddMenuEntry("Line strip", GL_LINE_STRIP);
-		glutAddMenuEntry("Line loop", GL_LINE_LOOP);
-		glutAddMenuEntry("Polygon", GL_POLYGON);
-		glutAddMenuEntry("Triangles", GL_TRIANGLES);
+		glutAddMenuEntry("Points(p)", GL_POINTS);
+		glutAddMenuEntry("Lines(l)", GL_LINES);
+		glutAddMenuEntry("Line strip(s)", GL_LINE_STRIP);
+		glutAddMenuEntry("Line loop(l)", GL_LINE_LOOP);
+		glutAddMenuEntry("Polygon(y)", GL_POLYGON);
+		glutAddMenuEntry("Triangles(t)", GL_TRIANGLES);
 	color_menu = glutCreateMenu(colorMenu);
-		glutAddMenuEntry("Randomize", 0);
+		glutAddMenuEntry("Randomize(r)", 0);
 		glutAddMenuEntry("Blue", 1);
 		glutAddMenuEntry("Green", 2);
 		glutAddMenuEntry("Purple", 3);
 		glutAddMenuEntry("Red", 4);
 		glutAddMenuEntry("Yellow", 5);
 	line_width_menu = glutCreateMenu(lineWidthMenu);
-		glutAddMenuEntry("Randomize", 0);
+		glutAddMenuEntry("Randomize(w)", 0);
 		glutAddMenuEntry("1", 1);
 		glutAddMenuEntry("2", 2);
 		glutAddMenuEntry("4", 4);
@@ -485,12 +485,12 @@ void buildPopupMenu()
 		glutAddMenuEntry("8", 8);
 		glutAddMenuEntry("10", 10);
 	main_menu = glutCreateMenu(mainMenu);
-		glutAddMenuEntry("Select", -1);
+		glutAddMenuEntry("Select(d)", -1);
 		glutAddSubMenu("Draw", drawing_mode_menu);
 		glutAddSubMenu("Colors", color_menu);
 		glutAddSubMenu("Line width", line_width_menu);
-		glutAddMenuEntry("Pulsating effect", -2);
-    	glutAddMenuEntry("Clear screen", 1);
+		glutAddMenuEntry("Pulsating effect(e)", -2);
+    	glutAddMenuEntry("Clear screen(c)", 1);
     	glutAddMenuEntry("Exit", 2);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
