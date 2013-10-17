@@ -3,9 +3,9 @@ Simple sketchpad is an ancestor of modern graphics painting programs(e.g. Paint)
 
 
 <h3>Program execution</h3>
-The program was developed for Mac Os X platform. It should work for any other platform after small changes in MakeFile. To run the program you need to go invoke the following command:
+The program was developed for Mac Os X platform. It should work for any other platform after small changes in Makefile. To run the program, please invoke the following command:
 
 <b>make && ./sketchpad</b>
 
 <h3>User interface</h3>
-You may control the program by keyboard shortcuts and a pop-up menu. The latter is visible when right mouse button is depressed. All keyboard shortcuts may be read from the pop-up menu.
+You may control the program by keyboard shortcuts and a pop-up menu. The latter is visible when <b>right mouse button</b> is depressed. All keyboard shortcuts may be read from the pop-up menu.
