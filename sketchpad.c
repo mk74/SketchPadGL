@@ -97,6 +97,7 @@ void mouse(int btn, int state, int x, int y);
 void motion(int x, int y);
 void passiveMotion(int x, int y);
 
+void exit_program();
 int main(int argc, char** argv);
 
 
@@ -396,7 +397,7 @@ void mainMenu(int value)
 			glutPostRedisplay();
 			break;
 		case 2: 
-			exit(0);
+			exit_program();
 			break;
 	}
 }
@@ -547,7 +548,7 @@ void keyboard(unsigned char key, int x, int y)
 	int should_finish_object=1;
 	switch(key){
 		case 27: //ESCAPE
-			exit(0);
+			exit_program();
 			break;
 		case 'p':
 			drawing_mode = GL_POINTS;
@@ -671,6 +672,11 @@ void passiveMotion(int x, int y)
 //Main program
 //------------
 
+void exit_program(){
+	destroyPrims();
+	exit(0);
+}
+
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
@@ -689,5 +695,5 @@ int main(int argc, char** argv)
     glutKeyboardFunc(keyboard);
 
     glutMainLoop();
-    return EXIT_SUCCESS;
+    exit_program();
 }
