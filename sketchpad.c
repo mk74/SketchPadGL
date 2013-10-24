@@ -24,6 +24,8 @@
 #define START_H 800
 #define START_DRAWING_MODE GL_TRIANGLES
 
+#define PULSATING_FACTOR 2
+
 
 //----------
 //data structures
@@ -533,7 +535,7 @@ void reshape(int new_w, int new_h)
 void idle() 
 {
 	if(drawing_mode==-2){
-		if(pulsating_time < PULSATING_INTERVAL*2)
+		if(pulsating_time < PULSATING_INTERVAL*PULSATING_FACTOR)
 			pulsating_time++;
 		else
 			pulsating_time=0;
@@ -685,7 +687,8 @@ int main(int argc, char** argv)
     glutInitWindowPosition(0, 0);
     glutCreateWindow("Sketchpad");
     buildPopupMenu();
-
+	
+    // Register callbacks
     glutReshapeFunc(reshape);
     glutDisplayFunc(display); 
     glutIdleFunc(idle);
